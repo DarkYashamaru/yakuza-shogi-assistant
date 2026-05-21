@@ -14,6 +14,6 @@ def binary_threshold(img: np.array) -> np.array:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Binary threshold (now safely operating on a single channel)
-    _, binary_img = cv2.threshold(gray, 95, 255, cv2.THRESH_BINARY_INV)
+    _, binary_img = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY_INV)
 
     return binary_img

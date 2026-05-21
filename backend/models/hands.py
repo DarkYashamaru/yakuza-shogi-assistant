@@ -13,11 +13,27 @@ class Hand:
     def to_sfen(self) -> str:
         # Strict SFEN piece value priority ordering
         piece_order = ['rook', 'bishop', 'gold', 'silver', 'knight', 'lance', 'pawn']
-        
+
         # Map names to their standard SFEN single-letter symbols
         sfen_symbols = {
-            'pawn': 'P', 'lance': 'L', 'knight': 'N', 'silver': 'S', 
-            'gold': 'G', 'bishop': 'B', 'rook': 'R'
+            'pawn': 'P',
+            'lance': 'L',
+            'knight': 'N',
+            'silver': 'S',
+            'gold': 'G',
+            'bishop': 'B',
+            'rook': 'R'
+        }
+
+        # Maximum legal amounts in a player's hand
+        max_counts = {
+            'rook': 1,
+            'bishop': 1,
+            'gold': 4,
+            'silver': 4,
+            'knight': 4,
+            'lance': 4,
+            'pawn': 18
         }
 
         # Tracks totals for this specific hand
@@ -31,19 +47,29 @@ class Hand:
             if hp.piece.name == 'empty':
                 continue
 
-            # Rule: If name is not empty but amount is 0, assume it's 1
-            actual_amount = hp.amount if hp.amount > 0 else 1
             name = hp.piece.name
-            
+
+            # Ignore unknown piece names safely
+            if name not in counts:
+                continue
+
+            # If amount is invalid (0 or negative), assume 1
+            actual_amount = hp.amount if hp.amount > 0 else 1
+
             counts[name] += actual_amount
+
+        # 2. Clamp counts to legal maximums
+        for name in counts:
+            counts[name] = min(counts[name], max_counts[name])
 
         sfen_parts = []
 
-        # 2. Build the string segment
+        # 3. Build the string segment
         for name in piece_order:
             count = counts[name]
+
             if count > 0:
-                symbol = sfen_symbols[name].upper()
+                symbol = sfen_symbols[name]
                 sfen_parts.append(f"{count if count > 1 else ''}{symbol}")
 
         return "".join(sfen_parts)

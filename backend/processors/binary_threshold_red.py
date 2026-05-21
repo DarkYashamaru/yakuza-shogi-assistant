@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 
-def binary_threshold_red(img):
+def binary_threshold_red(img: np.array, theshold: int = 180) -> np.array:
     # Normalize size
     img = cv2.resize(img, (94, 85))
 
@@ -16,7 +16,7 @@ def binary_threshold_red(img):
     # 2. Define the TUNED ranges for Red
     # Raised Saturation min from 70 -> 100
     # Raised Value min from 50 -> 100 (This kills the blacks/shadows)
-    lower_red1 = np.array([0, 170, 170])
+    lower_red1 = np.array([0, theshold, theshold])
     upper_red1 = np.array([10, 255, 255])
     
     lower_red2 = np.array([165, 100, 100])  # Slightly widened hue to 165 to catch deeper reds

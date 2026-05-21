@@ -10,12 +10,20 @@ def resize_preserve_aspect(
     target_size: int
 ) -> np.ndarray:
 
+    # Validate image
+    if img is None or img.size == 0:
+        return np.zeros((target_size, target_size), dtype=np.uint8)
+
     h, w = img.shape
+
+    # Prevent division by zero
+    if h == 0 or w == 0:
+        return np.zeros((target_size, target_size), dtype=np.uint8)
 
     scale = target_size / max(w, h)
 
-    new_w = int(w * scale)
-    new_h = int(h * scale)
+    new_w = max(1, int(w * scale))
+    new_h = max(1, int(h * scale))
 
     resized = cv2.resize(
         img,

@@ -2,6 +2,7 @@ import subprocess
 import threading
 import queue
 import time
+from tools.file_logger import Logger
 
 from pathlib import Path
 
@@ -50,7 +51,11 @@ class YaneuraOuClient:
             if not line:
                 break
 
-            q.put(line.strip())
+            clean = line.strip()
+
+            Logger.info(f"[ENGINE] {clean}")
+
+            q.put(clean)
 
     # -------------------------------------------------
     # Send command
@@ -59,6 +64,7 @@ class YaneuraOuClient:
     def send(self, command: str):
 
         print(f">>> {command}")
+        Logger.info(f"[ENGINE SEND] {command}")
 
         if self.engine.stdin:
             self.engine.stdin.write(command + "\n")

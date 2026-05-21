@@ -36,7 +36,7 @@ def compare_against_templates(cell_to_compare, templates)->int:
         # Convert to a human-readable percentage score
         match_percentage = max_val * 100
 
-        Logger.info(f"comparing against: {target_name} score: {match_percentage}")
+        #Logger.info(f"comparing against: {target_name} score: {match_percentage}")
 
         if match_percentage > highest_score:
             highest_score = match_percentage
@@ -74,7 +74,7 @@ def compare_against_templates(cell_to_compare, templates)->int:
 
     #print(f"best match {best_match}, score {highest_score}")
 
-    Logger.info(f"Highest score: {highest_score} best match: {best_match}")
+    #Logger.info(f"Highest score: {highest_score} best match: {best_match}")
 
     name_without_ext = Path(best_match).stem
     result = 0

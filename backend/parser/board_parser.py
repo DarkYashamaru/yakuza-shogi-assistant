@@ -1,34 +1,71 @@
+from concurrent.futures import ThreadPoolExecutor
+
 from models.board import Board
 from parser.extract_cells import generate_cells
 from parser.compare_cells import compare_cell
 from models.piece import Piece
 from parser.check_empty_cell import check_empty
 from tools.file_logger import Logger
+
 import numpy as np
 import cv2
+import time
 
-def parse_board(img: np.array)->Board:
+
+def process_cell(cell):
+
+    piece = Piece.empty()
+
+    if not check_empty(cell.image):
+
+        start = time.perf_counter()
+        Logger.info(f"Comparing cell x:{cell.x} y:{cell.y}")
+
+        piece = compare_cell(
+            cell.image,
+            cell.x,
+            cell.y
+        )
+
+        Logger.info(
+            f"Comparing cell x:{cell.x} y:{cell.y} "
+            f"took: {(time.perf_counter() - start)*1000:.2f} ms"
+        )
+
+    cell.piece = piece
+
+    return cell
+
+
+def parse_board(img: np.ndarray) -> Board:
+
+    start = time.perf_counter()
+
     cells = generate_cells(img)
 
-    result = []
+    Logger.info(
+        f"Generate cells took: "
+        f"{(time.perf_counter() - start)*1000:.2f} ms"
+    )
 
-    for cell in cells:
-        piece = Piece.empty()
-        cell_img = cv2.imread(cell.image_path)
+    Logger.info("Starting cell comparison")
 
-        Logger.info(f"Checking Cell x:{cell.x} y:{cell.y}")
+    cell_compare_start = time.perf_counter()
 
-        if not check_empty(cell_img):
-            piece = compare_cell(cell_img, cell.x, cell.y)
-            Logger.info(f"{piece.name} in Cell x:{cell.x} y:{cell.y}") 
-        else:
-            Logger.info(f"Cell is empty")
+    # Parallel processing
+    with ThreadPoolExecutor(max_workers=8) as executor:
 
-        cell.piece = piece
+        result = list(
+            executor.map(
+                process_cell,
+                cells
+            )
+        )
 
-        #print(f"x:{cell.x} y:{cell.y} {piece.owner} {piece.name}")
-
-        result.append(cell)
+    Logger.info(
+        f"Comparing cells took: "
+        f"{(time.perf_counter() - cell_compare_start)*1000:.2f} ms"
+    )
 
     board = Board(result, "")
 

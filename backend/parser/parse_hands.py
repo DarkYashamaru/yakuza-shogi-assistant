@@ -6,6 +6,8 @@ from parser.compare_cells import compare_hand_cell
 from processors.binary_threshold import binary_threshold
 from pathlib import Path
 from parser.check_empty_cell import check_empty
+from parser.compare_numbers import compare_number
+from tools.save_debug_image import save_debug
 import numpy as np
 import os
 import cv2
@@ -61,7 +63,7 @@ def crop_hand( img: np.ndarray, left: int, top: int, right: int, bottom: int, pl
         f"{os.getcwd()}/{temp_cell_folder}/{player}_hand.png"
     )
 
-    cv2.imwrite(hand_path, hand)
+    #cv2.imwrite(hand_path, hand)
 
     # -------------------------------------------------
     # COMPUTE CELL SIZE
@@ -104,7 +106,7 @@ def crop_hand( img: np.ndarray, left: int, top: int, right: int, bottom: int, pl
                 f"{player}_{row}_{col}.png"
             )
 
-            cv2.imwrite(cell_path, cell_img)
+            #cv2.imwrite(cell_path, cell_img)
 
             # -----------------------------------------
             # CREATE CELL MODEL
@@ -114,14 +116,14 @@ def crop_hand( img: np.ndarray, left: int, top: int, right: int, bottom: int, pl
                 row,
                 col,
                 None,
-                cell_path
+                cell_img
             )
 
             cells.append(cell)
 
     return cells
 
-def extract_hand_from_cells(cells, player, img: np.ndarray, positions) -> Hand:
+def extract_hand_from_cells(cells, player, img: np.ndarray, positions, reverse_amounts: bool = True) -> Hand:
 
     pieces = []
 
@@ -130,11 +132,9 @@ def extract_hand_from_cells(cells, player, img: np.ndarray, positions) -> Hand:
         piece = Piece.empty()
         piece_amount = 0
 
-        cell_img = cv2.imread(cell.image_path)
+        if not check_empty(cell.image):
 
-        if not check_empty(cell_img):
-
-            piece = compare_hand_cell(cell_img)
+            piece = compare_hand_cell(cell.image)
             piece.owner = player
             piece_amount = 1
 
@@ -146,17 +146,18 @@ def extract_hand_from_cells(cells, player, img: np.ndarray, positions) -> Hand:
 
     for index, (left, top, right, bottom) in enumerate(positions):
 
+        piece_amount = 0
         amount_pos_img = img[top:bottom, left:right]
 
-        debug_path = f"debug/{player}_{index}.png"
+        save_debug(amount_pos_img, f"{player}_{index}")
 
-        cv2.imwrite(debug_path, amount_pos_img)
-
-        piece_amount = parse_image(amount_pos_img)
+        if not check_empty(amount_pos_img):
+            piece_amount = compare_number(amount_pos_img)
 
         results.append(piece_amount)
 
-    results.reverse()
+    if reverse_amounts:
+        results.reverse()
 
     for index, piece in enumerate(pieces):
 
@@ -171,7 +172,7 @@ def generate_hands(img: np.array)->Hands:
     player_cells = crop_hand(img, 1443+hand_witdh_padding, 676+player_hand_top_offset, 1745-hand_witdh_padding, 1005-player_hand_bottom_offset, "player")
 
     enemy_hand = extract_hand_from_cells(enemy_cells, "enemy", img, enemy_crop_amount_positions)
-    player_hand = extract_hand_from_cells(player_cells, "player", img, player_crop_amount_positions)
+    player_hand = extract_hand_from_cells(player_cells, "player", img, player_crop_amount_positions, reverse_amounts=False)
 
     return Hands(enemy_hand, player_hand)
     #return Hands(None, None)

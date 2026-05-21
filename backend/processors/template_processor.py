@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from processors.binary_threshold import binary_threshold
+from processors.binary_threshold_red import binary_threshold_red
 from processors.bbox_processor import get_bbox_and_crop
 from processors.center_of_mass_normalization import normalize_piece
 from tools.save_debug_image import save_debug
@@ -16,6 +17,17 @@ def process_template(template: np.array, apply_binary:bool = True, apply_bbox:bo
         result = get_bbox_and_crop(result)
 
     normalized = normalize_piece(result)
+    #debug
+    #save_debug(normalized)
+    return normalized
+
+def process_template_red(template: np.array, theshold: int = 180) -> np.array:
+
+    red = binary_threshold_red(template, theshold)
+    
+    cropped = get_bbox_and_crop(red)
+
+    normalized = normalize_piece(cropped)
     #debug
     #save_debug(normalized)
     return normalized

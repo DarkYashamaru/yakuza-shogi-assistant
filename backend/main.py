@@ -15,15 +15,20 @@ from processors.preprocess_static_templates import process_static_templates
 from parser.compare_cells import compare_cell
 from tools.file_logger import Logger
 import cv2
-
+import time
 
 PROCESS_NAME = "likeadragon8.exe"
 
 
 def analyze_board(client):
+    board_analysis_start = time.perf_counter()
+
+
     print("\n=== Capturing board ===")
 
+    start = time.perf_counter()
     img = screenshot(PROCESS_NAME)
+    Logger.info(f"Screenshot took: {(time.perf_counter() - start)*1000:.2f} ms")
 
     if img is None:
         print("Screenshot failed")
@@ -31,32 +36,49 @@ def analyze_board(client):
 
     try:
         # Parse board
+        start = time.perf_counter()
         board = parse_board(img)
+        Logger.info(f"Board Parsing took: {(time.perf_counter() - start)*1000:.2f} ms")
+
+        start = time.perf_counter()
         turn_count = parse_turn_count(img)
+        Logger.info(f"Parse turn count took: {(time.perf_counter() - start)*1000:.2f} ms")
 
         if turn_count % 2 == 0:
             player_is_sente = False
         else:
             player_is_sente = True
 
-        bgr_img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        hands = generate_hands(bgr_img)
-        print(hands.player_hand)
+        start = time.perf_counter()
+        hands = generate_hands(img)
+        Logger.info(f"Parse hands took: {(time.perf_counter() - start)*1000:.2f} ms")
 
         # Convert to SFEN
+        start = time.perf_counter()
         sfen = board_to_sfen(board, player_is_sente, turn_count, hands)
+        Logger.info(f"Board to sfen took: {(time.perf_counter() - start)*1000:.2f} ms")
 
         print(f"SFEN: {sfen}")
 
+        #DEBUG
+        print("+++++++++++++ DEBUG BOARD ++++++++++++++++")
+        board.best_move = "7g7f"
+        render_board(board, player_is_sente)
+        print("+++++++++++++ DEBUG BOARD ++++++++++++++++")
+
         # Get best move
+        start = time.perf_counter()
         move = client.get_best_move(sfen)
+        Logger.info(f"Get best move took: {(time.perf_counter() - start)*1000:.2f} ms")
 
         move = translate_move_perspective(move, player_is_sente)
 
         board.best_move = move
 
         # Draw board
+        start = time.perf_counter()
         render_board(board, player_is_sente)
+        Logger.info(f"Render board took: {(time.perf_counter() - start)*1000:.2f} ms")
         #render_board(board, player_is_sente)
 
         print(f"Best move: {move}")
@@ -64,6 +86,8 @@ def analyze_board(client):
     except Exception as e:
         print("\n=== FULL ERROR ===")
         traceback.print_exc()
+
+    Logger.info(f"Complete board analisis took: {(time.perf_counter() - board_analysis_start)*1000:.2f} ms")
 
 
 def main():
