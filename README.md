@@ -104,12 +104,11 @@ Despite this, the current prototype was good enough in testing to beat all ranke
 ## Planned Improvements
 
 - Better computer vision accuracy
-- Support for promoted pieces and captured pieces
+- Better support for promoted pieces and captured pieces
 - Overlay UI instead of terminal output
 - Real-time board tracking
 - Additional resolutions
 - Support for older *Yakuza / Like a Dragon* titles
-- Puzzle shogi support
 - Better move visualization
 
 ---
